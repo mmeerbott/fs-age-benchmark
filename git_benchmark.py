@@ -36,6 +36,7 @@ import shlex
 import sys
 import os
 import argparse
+import traceback
 from distutils.version import LooseVersion
 
 ####################
@@ -104,7 +105,9 @@ subprocess.check_call(shlex.split(git_gc_off_cmd), cwd = dest_repo)
 # generate list of commits
 git_rev_list_cmd = "git rev-list --reverse HEAD"
 rev_list = subprocess.check_output(shlex.split(git_rev_list_cmd), 
-                                   cwd = src_repo).split('\n')
+                                       cwd = src_repo).split('\n')
+    
+
 if (len(rev_list) < total_pulls):
     print("Source repository does not have enough commits.")
     print("Have {}, test requires {}".format(len(rev_list), total_pulls))
@@ -121,26 +124,33 @@ print('-' * 80)
 
 for pull in range(0, total_pulls + 1):
     # print progress bar
-    overall_progress = 20 * pull / total_pulls
-    current_progress = 20 * (pull % pulls_per_test) / pulls_per_test 
-    progress = ("\r Overall: |{0}{1}| {2: >3}%"
-		" Next test: |{3}{4}| {5: >3}%").format(
-			    '#' * overall_prog,
-			    '-' * (20 - overall_prog),
-			    100 * pull / npulls,
-			    '#' * current_prog,
-			    '-' * (20 - current_prog),
-			    100 * (pull % step)/npulls
-			    )
-    sys.stdout.write(progress)
-    sys.stdout.flush()
+    if pull % pulls_per_test == 0:
+        overall_progress = 20 * pull / total_pulls
+        current_progress = 20 * (pull % pulls_per_test) / pulls_per_test 
+        progress = ("\r Overall: |{0}{1}| {2: >3}%"
+            " Next test: |{3}{4}| {5: >3}%").format(
+                    '#' * overall_progress,
+                    '-' * (20 - overall_progress),
+                    100 * pull / total_pulls,
+                    '#' * current_progress,
+                    '-' * (20 - current_progress),
+                    100 * (pull % pulls_per_test)/pulls_per_test
+                    )
+        sys.stdout.write(progress)
+        sys.stdout.flush()
 
     # perform the next git pull
     git_pull_cmd = "git pull --no-edit -q -s recursive -X theirs {} {}".format(
 		    src_repo, rev_list[pull].strip())
-    subprocess.check_call(shlex.split(git_pull_cmd), 
-			  cwd = dest_repo, stderr = devnull, 
-			  stdout = devnull)
+    try:
+        subprocess.check_call(shlex.split(git_pull_cmd), 
+                  cwd = dest_repo, stderr = devnull, 
+                  stdout = devnull)
+    except:
+        traceback.print_exc()
+        output_file.write("<<pull {} failed>>\n".format(pull))
+        print ("<<pull  {} failed>>\n".format(pull))
+        continue
 
     # run the test_script
     if pull % pulls_per_test == 0:

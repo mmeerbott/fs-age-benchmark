@@ -25,9 +25,9 @@ AGED="$(TIMEFORMAT='%3R'; time (grep -r "t26EdaovJD" $AGED_PATH) 2>&1)"
 SIZE="$(du -s $AGED_PATH | awk '{print $1}')"
 
 # create a new f2fs filesystem, mount it, time a recursive grep and dismount it
-mkfs.f2fs -f $UNAGED_BLKDEV &>> log_f2fs.txt
+mkfs.f2fs $UNAGED_BLKDEV #&>> log_f2fs.txt
 mount $UNAGED_BLKDEV $UNAGED_PATH &>> log_f2fs.txt
-cp -a $AGED_PATH/* $UNAGED_PATH
+cp -a $AGED_PATH/* $UNAGED_PATH 2>/dev/null
 umount $UNAGED_PATH &>> log_f2fs.txt
 mount $UNAGED_BLKDEV $UNAGED_PATH
 UNAGED="$(TIMEFORMAT='%3R'; time (grep -r "t26EdaovJD" $UNAGED_PATH) 2>&1)"
