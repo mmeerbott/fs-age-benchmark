@@ -80,3 +80,7 @@ description for each of the files.
 
 `ext4_aged_out.txt`: 
     the same as the above, but for the EXT4 runs.
+
+### report
+Contains files for creating the report that was turned in for the course. Uses a makefile
+to generate the PDF from a LaTeX file.
