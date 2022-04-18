@@ -1,19 +1,82 @@
-# Git-Benchmark
-### Git benchmark for file system aging
+# F2FS and EXT4 Reliability 
+### FS Age Benchmarking
+### Measuring reliability through aging
 ---
 
-### How it works:
-The benchmarks ages a destination file system by performing git pulls from a source git repository. After a fixed number of pulls, the benchmark runs a provided script.
+### Dependencies
+`libf2fs0 f2fs-tools`
 
-### How to measure aging in ext4:
-1. Clone a repository to path_to_src_repo
-2. Initialize a filesystem at path_to_dest
-3. Run `python git_benchmark.py path_to_src_repo path_to_dest output.txt total_pulls pulls_per_test ./grep_ext4.sh path_to_dest dest_blkdev path_to_unaged unaged_blkdev` (must be root)
-4. Read results from output.txt
+[Git-Benchmark Scripts](https://github.com/aineshbakshi/Git-Benchmark)
+which are placed in `src/`: `git_benchmark.py grep_ext4.sh grep-f2fs.sh`
 
-If the file system is mounted at `/mnt/aged` on block device `/dev/sda1`, the unaged version will be created at `/mnt/unaged` on `/dev/sda2`, and we want to perform a grep test every 100 pulls for 10,000 total pulls from a local clone of the linux kernel repository, we run:
+### How to Run
+You'll need to install the dependencies before running.
 
-`python git_benchmark.py linux /mnt/aged output.txt 10000 100 ./grep.ext4.sh /mnt/aged /dev/sda1 /mnt/unaged /dev/sda2`
+This section includes the files:
+``` 
+    runner.sh
+    git_benchmark.py
+    grep_ext4.sh
+    grep_f2fs.sh
+    reset.sh
+```
 
-### How to run a different test:
-The benchmark takes a program to execute together with arbitrary parameters, so any bash script or other executable can be provided and that will be run instead of the grep test.
+`runner.sh` is a wrapper that uses Git-Benchmark scripts
+
+`reset.sh` is for resetting 
+the SD card to start the tests over (deletes the SD card's contents).
+
+To run the tests, I created `runner.sh` to run tests for both EXT4 and 
+F2FS, so that it can run in background. You will need to change the 
+variables in the file. Below is a summary of them.
+
+
+>    `SRC_REPO`: 
+>        the path to git repo on your computer to pull from.
+>
+>    `DEST`: 
+>        the path to be aged
+>
+>    `OUTPUT_FILE`: 
+>        the file you want the script to write to
+>
+>    `TOTAL_PULLS`: 
+>        total number of pulls you want performed
+>
+>    `PULLS_PER_TEST`: 
+>        the step/amount-of-pulls you want to perform grep-tests at
+>
+>    `TEST_SCRIPT`: 
+>        the script that performs the grep tests
+
+
+`PATH_TO_AGED`: 
+    the path to the aged directory (you may need to create one)
+`AGED_BLK_DEV`: 
+    the device partition to age (found in /dev/)
+`PATH_TO_UNAGED`: 
+    the path to the aged directory (you may need to create one)
+`UNAGED_BLK_DEV`: 
+    the device partition that won't be aged (found in /dev/)
+
+
+    Note: These variables are changed half way through the script. Make sure you
+    change those as well. First half of the scipt is for F2FS, the other half is
+    for EXT4.
+
+### data/
+This directory contains the data from running the experiments. Below is a 
+description for each of the files.
+
+`plots.gp`: 
+    this file can be loaded in gnuplot to plot the results into a graph.
+
+`data.dat`: 
+    the data for each run, formatted for gnuplot for `plots.gp`.
+
+`f2fs_aged_out.txt`: 
+    the raw data (in text) from the F2FS runs, with each failed pull line 
+    deleted, except for the first and last in each section.
+
+`ext4_aged_out.txt`: 
+    the same as the above, but for the EXT4 runs.

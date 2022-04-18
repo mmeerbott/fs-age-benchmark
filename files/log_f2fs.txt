@@ -1,2 +1,0 @@
-mount: /dev/mmcblk0p4 is already mounted or /home/michael/osproj/flat busy
-       /dev/mmcblk0p4 is already mounted on /home/michael/osproj/flat
